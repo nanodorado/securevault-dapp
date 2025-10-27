@@ -8,14 +8,32 @@ export const useWallet = () => {
   const [error, setError] = useState(null);
 
   const connect = async () => {
+    // Prevent multiple simultaneous connection attempts
+    if (isConnecting) {
+      console.log('Connection already in progress, skipping...');
+      return;
+    }
+
     setIsConnecting(true);
     setError(null);
     try {
       const { address, chainId: chain } = await connectWallet();
       setAccount(address);
       setChainId(chain);
+      setError(null); // Clear any previous errors
     } catch (err) {
-      setError(err.message);
+      // Handle specific MetaMask errors
+      let errorMessage = err.message;
+      
+      if (err.code === -32002) {
+        errorMessage = 'Please check MetaMask - there is a pending connection request waiting for your approval.';
+      } else if (err.code === 4001) {
+        errorMessage = 'Connection rejected. Please approve the connection in MetaMask.';
+      } else if (err.message?.includes('already pending')) {
+        errorMessage = 'Please check your MetaMask extension - a request is waiting for approval.';
+      }
+      
+      setError(errorMessage);
       console.error('Wallet connection error:', err);
     } finally {
       setIsConnecting(false);
