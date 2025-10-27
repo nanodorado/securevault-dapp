@@ -2,11 +2,15 @@ import { useState } from 'react';
 import { useWallet } from './hooks/useWallet';
 import { useVaultInfo } from './hooks/useVaultInfo';
 import { formatAddress } from './utils/ethereum';
+import { checkMetaMask } from './utils/debug';
 import WalletConnect from './components/WalletConnect';
 import VaultDashboard from './components/VaultDashboard';
 import ProposeTransaction from './components/ProposeTransaction';
 import TransactionsList from './components/TransactionsList';
 import './App.css';
+
+// Log debug info on load
+checkMetaMask();
 
 function App() {
   const { account, isConnected, connect, isConnecting, error: walletError } = useWallet();
@@ -34,9 +38,28 @@ function App() {
           <div className="connect-prompt">
             <h2>Welcome to SecureVault</h2>
             <p>Connect your wallet to interact with the vault</p>
+            {walletError && (
+              <div className="error-box" style={{
+                backgroundColor: '#ff4444',
+                color: 'white',
+                padding: '15px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                maxWidth: '500px',
+                margin: '0 auto 20px'
+              }}>
+                <strong>⚠️ Connection Error:</strong>
+                <p style={{margin: '10px 0 0 0'}}>{walletError}</p>
+              </div>
+            )}
             <button onClick={connect} disabled={isConnecting} className="btn-primary">
               {isConnecting ? 'Connecting...' : 'Connect Wallet'}
             </button>
+            <div style={{marginTop: '20px', fontSize: '14px', color: '#888'}}>
+              <p>✅ Make sure you have MetaMask installed</p>
+              <p>✅ Unlock your MetaMask wallet</p>
+              <p>✅ Switch to Sepolia testnet</p>
+            </div>
           </div>
         ) : (
           <>

@@ -32,13 +32,27 @@ export const getReadOnlyContract = () => {
 // Connect wallet
 export const connectWallet = async () => {
   try {
+    if (!window.ethereum) {
+      throw new Error('MetaMask is not installed. Please install MetaMask extension.');
+    }
+
+    console.log('Requesting accounts from MetaMask...');
     const provider = getProvider();
     const accounts = await provider.send('eth_requestAccounts', []);
+    
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No accounts found. Please unlock MetaMask.');
+    }
+
+    console.log('Connected account:', accounts[0]);
     const network = await provider.getNetwork();
+    console.log('Current network:', network.chainId.toString(), 'Expected:', EXPECTED_CHAIN_ID);
     
     // Check if on correct network
     if (network.chainId.toString() !== EXPECTED_CHAIN_ID) {
-      throw new Error(`Please switch to Sepolia testnet (Chain ID: ${EXPECTED_CHAIN_ID})`);
+      const errorMsg = `Wrong network! Please switch to Sepolia testnet.\nCurrent: Chain ${network.chainId}\nExpected: Chain ${EXPECTED_CHAIN_ID}`;
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
     
     return {
@@ -47,6 +61,9 @@ export const connectWallet = async () => {
     };
   } catch (error) {
     console.error('Error connecting wallet:', error);
+    if (error.code === 4001) {
+      throw new Error('Connection rejected. Please approve the connection in MetaMask.');
+    }
     throw error;
   }
 };
